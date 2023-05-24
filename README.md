@@ -26,8 +26,12 @@
 **[ICML 2017]**
 
 ## Experiments
-### Inner-loop curvature penalize
 - with basic 4-Convolution layers
+    - Baseline (ALFA): `bash ./experiment_scripts/alfa+maml.sh`
+    - ALFA+inner-loop lc: `bash ./experiment_scripts/alfa+maml_curvature_inner.sh`
+    - ALFA+outer-loop lc: `bash ./experiment_scripts/alfa+maml_curvature_outer.sh`
 
-
-### Outer-loop curvature penalize
+- with basic resnet12
+    - Baseline (ALFA): `bash ./experiment_scripts/alfa+maml_resnet12.sh`
+    - ALFA+inner-loop lc: `bash ./experiment_scripts/alfa+maml_resnet12_inner.sh`
+    - ALFA+outer-loop lc: `bash ./experiment_scripts/alfa+maml_resnet12_outer.sh`
