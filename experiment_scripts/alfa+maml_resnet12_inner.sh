@@ -11,4 +11,4 @@ cd /mlodata1/sfan/optML_proj/ALFA
 export DATASET_DIR="datasets/"
 export CUDA_VISIBLE_DEVICES=$1,$2,$3,$4
 # Activate the relevant virtual environment:
-python train_maml_system.py --name_of_args_json_file experiment_config/alfa+maml_resnet12.json --gpu_to_use $GPU_ID
+python train_maml_system.py --name_of_args_json_file experiment_config/alfa+maml_resnet12_curvature_inner.json --gpu_to_use $GPU_ID
