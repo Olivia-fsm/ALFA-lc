@@ -65,7 +65,11 @@ def get_args():
     
     # Curvature
     parser.add_argument('--use_curvature_inner', type=str, default="False", help='Whether to support curvature regularization for inner-loop classifiers')
+    parser.add_argument('--clip', type=float, default = -10.0, help='apply gradient clipping if greater than 0')
     parser.add_argument('--use_curvature_outer', type=str, default="False", help='Whether to support curvature regularization for outer-loop lr learner(MLP)')
+    parser.add_argument('--input_hessian_outer', type=str, default="True", help='Whether to include model curvature as an input for outer-loop lr learner(MLP)')
+    parser.add_argument('--top_n', type=int, default=1, help='top_n eigenvalue for hessian')
+    parser.add_argument('--layer_param_attn', type=str, default="True", help='Whether to include layer param-attention for outer-loop lr learner(MLP)')
     parser.add_argument('--clip_bn', type=str, default="False", help='Whether to perform the batch norm lipstchitz regularization')
     parser.add_argument('--init_lipschitz', type=float, default=10.0, help='init value for batch norm lipstchitz')
 
@@ -124,8 +128,3 @@ def extract_args_from_json(json_file_path, args_dict):
             args_dict[key] = summary_dict[key]
 
     return args_dict
-
-
-
-
-

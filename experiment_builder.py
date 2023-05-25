@@ -5,6 +5,7 @@ import sys
 from utils.storage import build_experiment_folder, save_statistics, save_to_json
 import time
 import torch
+import wandb
 
 
 class ExperimentBuilder(object):

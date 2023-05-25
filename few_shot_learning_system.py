@@ -1,10 +1,14 @@
 import os
 
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
+import pyhessian
+from pyhessian import hessian
 
 from meta_neural_network_architectures import VGGReLUNormNetwork, ResNet12
 from inner_loop_optimizers import LSLRGradientDescentLearningRule
@@ -40,6 +44,8 @@ class MAMLFewShotClassifier(nn.Module):
         self.current_epoch = 0
 
         self.rng = set_torch_seed(seed=args.seed)
+        if self.args.layer_param_attn:
+            self.names_attn_dict_per_param = nn.ParameterDict()
 
         if self.args.backbone == 'ResNet12':
             self.classifier = ResNet12(im_shape=self.im_shape, num_output_classes=self.args.
@@ -93,9 +99,12 @@ class MAMLFewShotClassifier(nn.Module):
         if self.args.alfa:
             num_layers = len(names_weights_copy)
             input_dim = num_layers*2
+            output_dim = num_layers*2
+            if self.args.input_hessian_outer:
+                input_dim += self.args.top_n
             # lr Learner defined here #
             fc1 = nn.Linear(input_dim, input_dim)
-            fc2 = nn.Linear(input_dim, input_dim)
+            fc2 = nn.Linear(input_dim, output_dim)
             if self.args.use_curvature_outer:
                 self.regularizer_activation_obj = get_activation_obj(activation_name='parametric_softplus')
                 fc1 = torch.nn.utils.parametrizations.spectral_norm(fc1)
@@ -353,34 +362,64 @@ class MAMLFewShotClassifier(nn.Module):
 
 
             for num_step in range(num_steps):
-
                 support_loss, support_preds = self.net_forward(x=x_support_set_task,
                                                                y=y_support_set_task,
                                                                weights=names_weights_copy,
                                                                backup_running_statistics=
                                                                True if (num_step == 0) else False,
                                                                training=True, num_step=num_step)
+                # Add inner-loop model gradient clipping
+                if self.args.clip > 0:
+                    # print(f'Clipping gradients at {self.args.clip}')
+                    torch.nn.utils.clip_grad_norm_(self.classifier.parameters(), self.args.clip)
+                    
                 generated_alpha_params = {}
                 generated_beta_params = {}
 
                 if self.args.alfa:
-                    # print('names_weights_copy')
-                    # print(names_weights_copy)
                     support_loss_grad = torch.autograd.grad(support_loss, names_weights_copy.values(), retain_graph=True, allow_unused=True)
-                    # print('support_loss_grad')
-                    # print(support_loss_grad)
                     per_step_task_embedding = []
-                    for k, v in names_weights_copy.items():
-                        per_step_task_embedding.append(v.mean())
-                
-                    for i in range(len(support_loss_grad)):
-                        try:
-                            per_step_task_embedding.append(support_loss_grad[i].mean())
-                        except:
-                            print(list(names_weights_copy.keys())[i])
+                    
+                    ## add hessian top eigenvalues into task embedding context
+                    if self.args.input_hessian_outer:
+                        criterion = nn.CrossEntropyLoss()
+                        hessian_data = (x_support_set_task, y_support_set_task)
+                        print('batch size: ', len(hessian_data[1]))
+                        self.classifier.zero_grad()
+                        hessian_comp = hessian(self.classifier, criterion, data=hessian_data, cuda=True)
+                        top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=self.args.top_n,)
+                        self.classifier.zero_grad()
+                        # per_step_task_embedding.append(torch.tensor(top_eigenvalues, dtype=torch.float))
+                    # Add param-wise attention weights to each layer
+                    if self.args.layer_param_attn:
+                        for k, v in names_weights_copy.items():
+                            # init attention weights
+                            self.names_attn_dict_per_param[k.replace(".", "-")] = nn.Parameter(
+                                                            data=torch.ones(v.flatten().shape) * (1/len(v.flatten())),
+                                                            requires_grad=True).cuda()
+                            # print(f'Param-wise Attn added at {k}: {self.names_attn_dict_per_param[k.replace(".", "-")].shape}')
+                            layer_weight = (self.names_attn_dict_per_param[k.replace(".", "-")] * v.flatten()).sum()
+                            per_step_task_embedding.append(layer_weight)
+                            
+                        for i in range(len(support_loss_grad)):
+                            k = list(names_weights_copy.keys())[i]
+                            layer_grad = (self.names_attn_dict_per_param[k.replace(".", "-")] * support_loss_grad[i].flatten()).sum()
+                            per_step_task_embedding.append(layer_grad)
+                    else:
+                        for k, v in names_weights_copy.items():
+                            per_step_task_embedding.append(v.mean())
+                    
+                        for i in range(len(support_loss_grad)):
+                            try:
+                                per_step_task_embedding.append(support_loss_grad[i].mean())
+                            except:
+                                print(list(names_weights_copy.keys())[i])
 
                     per_step_task_embedding = torch.stack(per_step_task_embedding)
-
+                    # print('per_step_task_embedding 1: ', per_step_task_embedding.shape)
+                    if self.args.input_hessian_outer:
+                        per_step_task_embedding = torch.concat([per_step_task_embedding, torch.tensor(top_eigenvalues, dtype=torch.float).cuda()])
+                    # print('per_step_task_embedding 2: ', per_step_task_embedding.shape)
                     generated_params = self.regularizer(per_step_task_embedding)
                     num_layers = len(names_weights_copy)
 

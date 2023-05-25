@@ -9,7 +9,7 @@
   "dataset_name":"mini_imagenet_full_size",
   "dataset_path":"mini_imagenet_full_size",
   "reset_stored_paths":false,
-  "experiment_name":"alfa+maml",
+  "experiment_name":"alfa+maml_curvature_inner",
   "train_seed": 0, "val_seed": 0,
   "indexes_of_folders_indicating_class": [-3, -2],
   "sets_are_pre_split": true,

@@ -149,9 +149,7 @@ class MetaMaxResLayerReLU(nn.Module):
         self.shortcut_conv = MetaConv2dLayer(in_channels=identity.shape[1], out_channels=out.shape[1],
                                 kernel_size=1,
                                 stride=1, padding=0, use_bias=self.use_bias,
-                                use_curvature=self.use_curvature,
-                                clip_bn=self.clip_bn,
-                                init_lipschitz=self.init_lipschitz)
+                                use_curvature=self.use_curvature,)
         if self.use_curvature:
             self.shortcut_conv = convspectralnorm_wrapper(self.shortcut_conv, im_size=x.size(2))
 
@@ -183,7 +181,7 @@ class MetaMaxResLayerReLU(nn.Module):
 
         # print(out.shape)
 
-    def forward(self, x, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, x, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
             Forward propagates by applying the function. If params are none then internal params are used.
             Otherwise passed params will be used to execute the function.
@@ -352,7 +350,7 @@ class MetaConvNormLayerSwish(nn.Module):
 
         # print(out.shape)
 
-    def forward(self, x, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, x, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
             Forward propagates by applying the function. If params are none then internal params are used.
             Otherwise passed params will be used to execute the function.
@@ -686,7 +684,7 @@ class MetaBatchNormLayer(nn.Module):
 
         self.momentum = momentum
 
-    def forward(self, input, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, input, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
         Forward propagates by applying a bach norm function. If params are none then internal params are used.
         Otherwise passed params will be used to execute the function.
@@ -782,7 +780,7 @@ class MetaLayerNormLayer(nn.Module):
             self.weight.data.fill_(1)
             self.bias.data.zero_()
 
-    def forward(self, input, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, input, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
             Forward propagates by applying a layer norm function. If params are none then internal params are used.
             Otherwise passed params will be used to execute the function.
@@ -894,7 +892,7 @@ class MetaConvNormLayerReLU(nn.Module):
 
         # print(out.shape)
 
-    def forward(self, x, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, x, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
             Forward propagates by applying the function. If params are none then internal params are used.
             Otherwise passed params will be used to execute the function.
@@ -1024,7 +1022,7 @@ class MetaNormLayerConvReLU(nn.Module):
         out = self.layer_dict['activation_function_pre'].forward(self.conv.forward(out))
         # print(out.shape)
 
-    def forward(self, x, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, x, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
             Forward propagates by applying the function. If params are none then internal params are used.
             Otherwise passed params will be used to execute the function.
@@ -1164,7 +1162,7 @@ class VGGReLUNormNetwork(nn.Module):
         out = self.layer_dict['linear'](out)
         print("VGGNetwork build", out.shape)
 
-    def forward(self, x, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, x, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
         Forward propages through the network. If any params are passed then they are used instead of stored params.
         :param x: Input image batch.
@@ -1326,7 +1324,7 @@ class ResNet12(nn.Module):
         out = self.layer_dict['linear'](out)
         print("ResNet12 build", out.shape)
 
-    def forward(self, x, num_step, params=None, training=False, backup_running_statistics=False):
+    def forward(self, x, num_step=1, params=None, training=False, backup_running_statistics=False):
         """
         Forward propages through the network. If any params are passed then they are used instead of stored params.
         :param x: Input image batch.
@@ -1372,14 +1370,16 @@ class ResNet12(nn.Module):
                 if param.requires_grad == True:
                     if param.grad is not None:
                         if torch.sum(param.grad) > 0:
-                            print(param.grad)
+                            # print('here!')
+                            # print(param.grad)
                             param.grad.zero_()
         else:
             for name, param in params.items():
                 if param.requires_grad == True:
                     if param.grad is not None:
                         if torch.sum(param.grad) > 0:
-                            print(param.grad)
+                            # print('here! =input_params')
+                            # print(param.grad)
                             param.grad.zero_()
                             params[name].grad = None
 
