@@ -4,9 +4,10 @@ export GPU_ID=$1
 
 echo $GPU_ID
 
+export WANDB_API_KEY="1dba8bb7f1589f867fa1538683d77eaf4e8209de"
 # put the path to the main directory here
 # cd ..
-cd /mlodata1/sfan/optML_proj/ALFA
+cd /mlodata1/sfan/optML_proj/ALFA-plus
 
 export DATASET_DIR="datasets/"
 export CUDA_VISIBLE_DEVICES=$1,$2,$3,$4

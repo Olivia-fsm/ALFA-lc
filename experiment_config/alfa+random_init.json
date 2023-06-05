@@ -58,7 +58,11 @@
   "random_init": true,
   "backbone": "4-CONV",
 
-  "use_curvature": false,
+  "use_curvature_inner": false,
+  "clip": -10.0,
+  "use_curvature_outer": false,
+  "input_hessian_outer": false,
+  "layer_param_attn":false,
   "clip_bn": false,
   "init_lipschitz": 10.0
 }

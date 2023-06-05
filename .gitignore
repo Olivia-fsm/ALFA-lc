@@ -130,3 +130,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# data
+datasets/
+
+# experiment
+alfa+random_init/
+logs/
