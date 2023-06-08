@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import wandb
 
 import pyhessian
 from pyhessian import hessian
@@ -390,22 +391,23 @@ class MAMLFewShotClassifier(nn.Module):
                         top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=self.args.top_n,)
                         self.classifier.zero_grad()
                         # per_step_task_embedding.append(torch.tensor(top_eigenvalues, dtype=torch.float))
+                    
                     # Add param-wise attention weights to each layer
                     if self.args.layer_param_attn:
                         for k, v in names_weights_copy.items():
-                            # init attention weights
+                            # init attention weights with uniform weights
                             self.names_attn_dict_per_param[k.replace(".", "-")] = nn.Parameter(
                                                             data=torch.ones(v.flatten().shape) * (1/len(v.flatten())),
                                                             requires_grad=True).cuda()
                             # print(f'Param-wise Attn added at {k}: {self.names_attn_dict_per_param[k.replace(".", "-")].shape}')
-                            layer_weight = (self.names_attn_dict_per_param[k.replace(".", "-")] * v.flatten()).sum()
+                            layer_weight = (F.softmax(self.names_attn_dict_per_param[k.replace(".", "-")]) * v.flatten()).sum()
                             per_step_task_embedding.append(layer_weight)
                             
                         for i in range(len(support_loss_grad)):
                             k = list(names_weights_copy.keys())[i]
                             layer_grad = (self.names_attn_dict_per_param[k.replace(".", "-")] * support_loss_grad[i].flatten()).sum()
                             per_step_task_embedding.append(layer_grad)
-                    else:
+                    else: # without param-wise attention (layer-average)
                         for k, v in names_weights_copy.items():
                             per_step_task_embedding.append(v.mean())
                     
@@ -581,6 +583,9 @@ class MAMLFewShotClassifier(nn.Module):
         losses['learning_rate'] = self.scheduler.get_lr()[0]
         self.optimizer.zero_grad()
         self.zero_grad()
+        # print('===== Train Step =====')
+        # print('losses: ', losses)
+        # print('per_task_target_preds: ', per_task_target_preds)
 
         return losses, per_task_target_preds
 
@@ -609,6 +614,10 @@ class MAMLFewShotClassifier(nn.Module):
         losses['loss'].backward() # uncomment if you get the weird memory error
         self.zero_grad()
         self.optimizer.zero_grad()
+        
+        # print('===== Eval Step =====')
+        # print('losses: ', losses)
+        # print('per_task_target_preds: ', per_task_target_preds)
 
         return losses, per_task_target_preds
 

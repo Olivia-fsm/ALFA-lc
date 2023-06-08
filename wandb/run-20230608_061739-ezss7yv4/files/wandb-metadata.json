@@ -1,0 +1,370 @@
+{
+    "os": "Linux-5.4.0-132-generic-x86_64-with-glibc2.31",
+    "python": "3.10.9",
+    "heartbeatAt": "2023-06-08T04:17:40.616398",
+    "startedAt": "2023-06-08T04:17:39.851210",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--name_of_args_json_file",
+        "experiment_config/alfa+random_init_outer.json",
+        "--gpu_to_use",
+        "0"
+    ],
+    "state": "running",
+    "program": "/mlodata1/sfan/optML_proj/ALFA-plus/train_maml_system.py",
+    "codePath": "train_maml_system.py",
+    "git": {
+        "remote": "https://github.com/Olivia-fsm/ALFA-lc.git",
+        "commit": "fbf1c61b9c373336f6b4157c202fd5085634f5ed"
+    },
+    "email": null,
+    "root": "/mlodata1/sfan/optML_proj/ALFA-plus",
+    "host": "xf-llm-0-0",
+    "username": "sfan",
+    "executable": "/opt/conda/bin/python",
+    "cpu_count": 32,
+    "cpu_count_logical": 64,
+    "cpu_freq": {
+        "current": 3290.239625000001,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3287.782,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3286.976,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3287.132,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3287.309,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3289.139,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.85,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.83,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3286.748,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.357,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3294.23,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3289.738,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.752,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.902,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3289.062,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3287.415,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3286.402,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3291.421,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3295.582,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3283.329,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.69,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3292.228,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3289.533,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.705,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.714,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3291.4,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3291.507,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3294.009,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.799,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.924,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.742,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.035,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.085,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3286.717,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.61,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3287.47,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.709,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.912,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.815,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3286.645,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.874,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.478,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.356,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3294.306,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.825,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3294.433,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.941,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.725,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3288.357,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3291.54,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3291.641,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.836,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3245.55,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3292.31,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3292.407,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.854,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.908,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.633,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.823,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.956,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3292.342,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3290.972,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3294.158,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.279,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3293.627,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "total": 438.30672454833984,
+        "used": 250.23955535888672
+    },
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA A100-SXM4-40GB",
+            "memory_total": 42949672960
+        }
+    ],
+    "memory": {
+        "total": 503.63489151000977
+    }
+}

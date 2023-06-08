@@ -13,6 +13,16 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 from utils.parser_utils import get_args
 
+class ImageDataset(Dataset):
+    def __init__(self, x_images, y_labels, transform=None):
+        self.data = x_images 
+        self.labels = y_labels
+        self.transform = transform
+    def __getitem__(self, index):
+        return self.data[index], self.labels[index]
+    def __len__(self):
+        return len(self.data)
+        
 
 class rotate_image(object):
 
@@ -134,12 +144,9 @@ class FewShotLearningDatasetParallel(Dataset):
         self.current_set_name = "train"
         self.num_target_samples = args.num_target_samples
         self.reset_stored_filepaths = args.reset_stored_filepaths
-        val_rng = np.random.RandomState(seed=args.val_seed)
-        val_seed = val_rng.randint(1, 999999)
-        train_rng = np.random.RandomState(seed=args.train_seed)
-        train_seed = train_rng.randint(1, 999999)
-        test_rng = np.random.RandomState(seed=args.val_seed)
-        test_seed = test_rng.randint(1, 999999)
+        val_seed = args.val_seed
+        train_seed = args.train_seed
+        test_seed = args.val_seed
         args.val_seed = val_seed
         args.train_seed = train_seed
         args.test_seed = test_seed
@@ -499,6 +506,9 @@ class FewShotLearningDatasetParallel(Dataset):
 
         x_images = []
         y_labels = []
+        
+        x_images_all = []
+        y_labels_all = []
 
         for class_entry in selected_classes:
             choose_samples_list = rng.choice(self.dataset_size_dict[dataset_name][class_entry],
@@ -517,16 +527,76 @@ class FewShotLearningDatasetParallel(Dataset):
             class_image_samples = torch.stack(class_image_samples)
             x_images.append(class_image_samples)
             y_labels.append(class_labels)
+            x_images_all.extend(class_image_samples)
+            y_labels_all.extend(class_labels)
 
         x_images = torch.stack(x_images)
         y_labels = np.array(y_labels, dtype=np.float32)
+        x_images_all = torch.stack(x_images_all)
+        y_labels_all = torch.tensor(y_labels_all, dtype=torch.long)
+        # print('x_images_all:', x_images_all.shape)
+        # print('y_labels_all:', y_labels_all.shape)
 
         support_set_images = x_images[:, :self.num_samples_per_class]
         support_set_labels = y_labels[:, :self.num_samples_per_class]
         target_set_images = x_images[:, self.num_samples_per_class:]
         target_set_labels = y_labels[:, self.num_samples_per_class:]
+        
+        # curvature_dataloader = self.get_curvature_loader(x_images=x_images_all, y_labels=y_labels_all)
+        return support_set_images, target_set_images, support_set_labels, target_set_labels, seed, x_images_all, y_labels_all
 
-        return support_set_images, target_set_images, support_set_labels, target_set_labels, seed
+    def get_curvature_loader(self, 
+                             dataset_name='train', augment_images=False,
+                             x_images=None,
+                             y_labels=None,
+                             batch_size=16,):
+        """
+        Generates a task-set to be used for training or evaluation
+        :param set_name: The name of the set to use, e.g. "train", "val" etc.
+        :return: A task-set containing an image and label support set, and an image and label target set.
+        """
+        #seed = seed % self.args.total_unique_tasks
+        if x_images is None or y_labels is None:
+            seed = self.seed[dataset_name]
+            rng = np.random.RandomState(seed)
+            selected_classes = rng.choice(list(self.dataset_size_dict[dataset_name].keys()),
+                                        size=self.num_classes_per_set, replace=False)
+            rng.shuffle(selected_classes)
+            k_list = rng.randint(0, 4, size=self.num_classes_per_set)
+            k_dict = {selected_class: k_item for (selected_class, k_item) in zip(selected_classes, k_list)}
+            episode_labels = [i for i in range(self.num_classes_per_set)]
+            class_to_episode_label = {selected_class: episode_label for (selected_class, episode_label) in
+                                    zip(selected_classes, episode_labels)}
+
+            x_images = []
+            y_labels = []
+
+            for class_entry in selected_classes:
+                choose_samples_list = rng.choice(self.dataset_size_dict[dataset_name][class_entry],
+                                                size=self.num_samples_per_class + self.num_target_samples, replace=False)
+                class_image_samples = []
+                class_labels = []
+                for sample in choose_samples_list:
+                    choose_samples = self.datasets[dataset_name][class_entry][sample]
+                    x_class_data = self.load_batch([choose_samples])[0]
+                    k = k_dict[class_entry]
+                    x_class_data = augment_image(image=x_class_data, k=k,
+                                                channels=self.image_channel, augment_bool=augment_images,
+                                                dataset_name=self.dataset_name, args=self.args)
+                    class_image_samples.append(x_class_data)
+                    class_labels.append(int(class_to_episode_label[class_entry]))
+                class_image_samples = torch.stack(class_image_samples)
+                x_images.extend(class_image_samples)
+                y_labels.extend(class_labels)
+
+            x_images = torch.stack(x_images)
+            y_labels = torch.tensor(y_labels, dtype=torch.long)
+        
+        trg_dataset = ImageDataset(x_images=x_images, y_labels=y_labels)
+        trg_loader = torch.utils.data.DataLoader(trg_dataset,
+                                              batch_size=batch_size,
+                                              shuffle=False)
+        return trg_loader
 
     def __len__(self):
         total_samples = self.data_length[self.current_set_name]
@@ -548,11 +618,11 @@ class FewShotLearningDatasetParallel(Dataset):
         self.seed[dataset_name] = seed
 
     def __getitem__(self, idx):
-        support_set_images, target_set_image, support_set_labels, target_set_label, seed = \
+        support_set_images, target_set_image, support_set_labels, target_set_label, seed, x_images, y_labels = \
             self.get_set(self.current_set_name, seed=self.seed[self.current_set_name] + idx,
                          augment_images=self.augment_images)
 
-        return support_set_images, target_set_image, support_set_labels, target_set_label, seed
+        return support_set_images, target_set_image, support_set_labels, target_set_label, seed, x_images, y_labels
 
     def reset_seed(self):
         self.seed = self.init_seed

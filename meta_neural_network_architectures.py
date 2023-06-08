@@ -202,9 +202,9 @@ class MetaMaxResLayerReLU(nn.Module):
         norm_params_shortcut = None
         activation_function_pre_params = None
         
-        if self.use_curvature:
-            self.conv3 = convspectralnorm_wrapper(self.conv3, im_size=x.size(2))
-            self.shortcut_conv = convspectralnorm_wrapper(self.shortcut_conv, im_size=x.size(2))
+        # if self.use_curvature:
+        #     self.conv3 = convspectralnorm_wrapper(self.conv3, im_size=x.size(2))
+        #     self.shortcut_conv = convspectralnorm_wrapper(self.shortcut_conv, im_size=x.size(2))
 
 
         if params is not None:
@@ -367,8 +367,8 @@ class MetaConvNormLayerSwish(nn.Module):
         conv_params = None
         activation_function_pre_params = None
 
-        if self.use_curvature:
-            self.conv = convspectralnorm_wrapper(self.conv, im_size=x.size(2))
+        # if self.use_curvature:
+        #     self.conv = convspectralnorm_wrapper(self.conv, im_size=x.size(2))
         
         
         if params is not None:
@@ -909,8 +909,8 @@ class MetaConvNormLayerReLU(nn.Module):
         conv_params = None
         activation_function_pre_params = None
         
-        if self.use_curvature:
-            self.conv = convspectralnorm_wrapper(self.conv, im_size=x.size(2))
+        # if self.use_curvature:
+        #     self.conv = convspectralnorm_wrapper(self.conv, im_size=x.size(2))
 
         if params is not None:
             params = extract_top_level_dict(current_dict=params)
@@ -1037,8 +1037,8 @@ class MetaNormLayerConvReLU(nn.Module):
         """
         batch_norm_params = None
         
-        if self.use_curvature:
-            self.conv = convspectralnorm_wrapper(self.conv, im_size=x.size(2))
+        # if self.use_curvature:
+        #     self.conv = convspectralnorm_wrapper(self.conv, im_size=x.size(2))
 
         if params is not None:
             params = extract_top_level_dict(current_dict=params)

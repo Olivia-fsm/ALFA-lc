@@ -1,0 +1,261 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.10
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.10.9
+    start_time: 1686135395.48881
+    t:
+      1:
+      - 1
+      - 41
+      - 55
+      2:
+      - 1
+      - 41
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.10.9
+      5: 0.13.10
+      8:
+      - 5
+alfa:
+  desc: null
+  value: true
+architecture_name:
+  desc: null
+  value: null
+attenuate:
+  desc: null
+  value: false
+backbone:
+  desc: null
+  value: 4-CONV
+batch_size:
+  desc: null
+  value: 2
+clip:
+  desc: null
+  value: -10.0
+clip_bn:
+  desc: null
+  value: false
+cnn_blocks_per_stage:
+  desc: null
+  value: 1
+cnn_num_blocks:
+  desc: null
+  value: 4
+cnn_num_filters:
+  desc: null
+  value: 48
+continue_from_epoch:
+  desc: null
+  value: latest
+conv_padding:
+  desc: null
+  value: true
+dataset_name:
+  desc: null
+  value: mini_imagenet_full_size
+dataset_path:
+  desc: null
+  value: datasets/mini_imagenet_full_size
+dropout_rate_value:
+  desc: null
+  value: 0.0
+enable_inner_loop_optimizable_bn_params:
+  desc: null
+  value: false
+evaluate_on_test_set_only:
+  desc: null
+  value: false
+evalute_on_test_set_only:
+  desc: null
+  value: false
+experiment_name:
+  desc: null
+  value: alfa+maml_outer
+first_order_to_second_order_epoch:
+  desc: null
+  value: -1
+gpu_to_use:
+  desc: null
+  value: 0
+image_channels:
+  desc: null
+  value: 3
+image_height:
+  desc: null
+  value: 84
+image_width:
+  desc: null
+  value: 84
+indexes_of_folders_indicating_class:
+  desc: null
+  value:
+  - -3
+  - -2
+init_inner_loop_learning_rate:
+  desc: null
+  value: 0.01
+init_inner_loop_weight_decay:
+  desc: null
+  value: 0.0005
+init_lipschitz:
+  desc: null
+  value: 10.0
+input_hessian_outer:
+  desc: null
+  value: false
+labels_as_int:
+  desc: null
+  value: false
+layer_param_attn:
+  desc: null
+  value: false
+learnable_batch_norm_momentum:
+  desc: null
+  value: false
+learnable_bn_beta:
+  desc: null
+  value: true
+learnable_bn_gamma:
+  desc: null
+  value: true
+learnable_per_layer_per_step_inner_loop_learning_rate:
+  desc: null
+  value: false
+load_into_memory:
+  desc: null
+  value: false
+max_models_to_save:
+  desc: null
+  value: 5
+max_pooling:
+  desc: null
+  value: true
+meta_learning_rate:
+  desc: null
+  value: 0.001
+meta_opt_bn:
+  desc: null
+  value: false
+min_learning_rate:
+  desc: null
+  value: 0.001
+minimum_per_task_contribution:
+  desc: null
+  value: 0.01
+multi_step_loss_num_epochs:
+  desc: null
+  value: 15
+name_of_args_json_file:
+  desc: null
+  value: experiment_config/alfa+maml_outer.json
+norm_layer:
+  desc: null
+  value: batch_norm
+num_classes_per_set:
+  desc: null
+  value: 5
+num_dataprovider_workers:
+  desc: null
+  value: 4
+num_evaluation_tasks:
+  desc: null
+  value: 600
+num_of_gpus:
+  desc: null
+  value: 1
+num_samples_per_class:
+  desc: null
+  value: 5
+num_stages:
+  desc: null
+  value: 4
+num_target_samples:
+  desc: null
+  value: 15
+number_of_evaluation_steps_per_iter:
+  desc: null
+  value: 5
+number_of_training_steps_per_iter:
+  desc: null
+  value: 5
+per_step_bn_statistics:
+  desc: null
+  value: false
+random_init:
+  desc: null
+  value: false
+reset_stored_filepaths:
+  desc: null
+  value: false
+reset_stored_paths:
+  desc: null
+  value: false
+reverse_channels:
+  desc: null
+  value: false
+samples_per_iter:
+  desc: null
+  value: 1
+second_order:
+  desc: null
+  value: true
+seed:
+  desc: null
+  value: 104
+sets_are_pre_split:
+  desc: null
+  value: true
+task_learning_rate:
+  desc: null
+  value: 0.1
+top_n:
+  desc: null
+  value: 1
+total_epochs:
+  desc: null
+  value: 100
+total_epochs_before_pause:
+  desc: null
+  value: 100
+total_iter_per_epoch:
+  desc: null
+  value: 500
+train_seed:
+  desc: null
+  value: 0
+train_val_test_split:
+  desc: null
+  value:
+  - 0.64
+  - 0.16
+  - 0.2
+use_cuda:
+  desc: null
+  value: true
+use_curvature_inner:
+  desc: null
+  value: false
+use_curvature_outer:
+  desc: null
+  value: true
+use_multi_step_loss_optimization:
+  desc: null
+  value: false
+val_seed:
+  desc: null
+  value: 0
+weight_decay:
+  desc: null
+  value: 0.0

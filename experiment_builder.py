@@ -6,7 +6,7 @@ from utils.storage import build_experiment_folder, save_statistics, save_to_json
 import time
 import torch
 import wandb
-
+from curvature_estimation import measure_curvature
 
 class ExperimentBuilder(object):
     def __init__(self, args, data, model, device):
@@ -36,6 +36,8 @@ class ExperimentBuilder(object):
 
         experiment_path = os.path.abspath(self.args.experiment_name)
         exp_name = experiment_path.split('/')[-1]
+        self.exp_name = exp_name
+        wandb.init(name=exp_name, project='alfa-lc', config=self.args)
         log_base_dir = 'logs'
         os.makedirs(log_base_dir, exist_ok=True)
 
@@ -64,6 +66,8 @@ class ExperimentBuilder(object):
             self.start_epoch = int(self.state['current_iter'] / self.args.total_iter_per_epoch)
 
         self.data = data(args=args, current_iter=self.state['current_iter'])
+        # self.curvature_dataloader = self.data.dataset.get_curvature_loader()
+        # print('Curvature_Loader: ', self.curvature_dataloader)
 
         print("train_seed {}, val_seed: {}, at start time".format(self.data.dataset.seed["train"],
                                                                   self.data.dataset.seed["val"]))
@@ -86,13 +90,17 @@ class ExperimentBuilder(object):
         if summary_losses is None:
             summary_losses = dict()
 
+        idx = 1
         for key in total_losses:
             summary_losses["{}_{}_mean".format(phase, key)] = np.mean(total_losses[key])
             summary_losses["{}_{}_std".format(phase, key)] = np.std(total_losses[key])
+            # wandb.log({f"{self.exp_name}/{phase}/{idx}.{key}_mean": summary_losses["{}_{}_mean".format(phase, key)],
+            #   f"{self.exp_name}/{phase}/{idx}.{key}_std": summary_losses["{}_{}_std".format(phase, key)],})
+            idx += 1
 
         return summary_losses
 
-    def build_loss_summary_string(self, summary_losses):
+    def build_loss_summary_string(self, summary_losses, curvature_dict=None, phase='train'):
         """
         Builds a progress bar summary string given current summary losses dictionary
         :param summary_losses: Current summary statistics
@@ -103,6 +111,14 @@ class ExperimentBuilder(object):
             if "loss" in key or "accuracy" in key:
                 value = float(value)
                 output_update += "{}: {:.4f}, ".format(key, value)
+        if curvature_dict is not None:
+            for key, value in curvature_dict.items():
+                value = float(value)
+                output_update += "{}: {:.4f}, ".format(key, value)
+
+        if phase=='epoch':
+            wandb_log_dict = {f"{key.split('_')[0]}/{key}": value for key, value in summary_losses.items()}
+            wandb.log(wandb_log_dict)
 
         return output_update
 
@@ -123,7 +139,14 @@ class ExperimentBuilder(object):
         :param pbar_train: The progress bar of the training.
         :return: Updates total_losses, train_losses, current_iter
         """
-        x_support_set, x_target_set, y_support_set, y_target_set, seed = train_sample
+        x_support_set, x_target_set, y_support_set, y_target_set, seed, x_images_all, y_labels_all = train_sample
+        # train_curvature_loader = self.data.dataset.get_curvature_loader(x_images=x_images_all, y_labels=y_labels_all)
+        # curvature_dict = measure_curvature(model=self.model.classifier,
+        #                                         dataloader=self.train_curvature_loader,
+        #                                         data_fraction=0.1,
+        #                                         batch_size=8,
+        #                                         num_power_iter=10,
+        #                                         device=self.device)
         data_batch = (x_support_set, x_target_set, y_support_set, y_target_set)
 
         if sample_idx == 0:
@@ -139,7 +162,7 @@ class ExperimentBuilder(object):
                 total_losses[key].append(float(value))
 
         train_losses = self.build_summary_dict(total_losses=total_losses, phase="train")
-        train_output_update = self.build_loss_summary_string(losses)
+        train_output_update = self.build_loss_summary_string(losses, phase="train")
 
         pbar_train.update(1)
         pbar_train.set_description("training phase {} -> {}".format(self.epoch, train_output_update))
@@ -156,7 +179,24 @@ class ExperimentBuilder(object):
         :param pbar_val: The progress bar of the val stage.
         :return: The updated val_losses, total_losses
         """
-        x_support_set, x_target_set, y_support_set, y_target_set, seed = val_sample
+        # x_support_set, x_target_set, y_support_set, y_target_set, seed = val_sample
+        x_support_set, x_target_set, y_support_set, y_target_set, seed, x_images_all, y_labels_all = val_sample
+        # print('x_images_all:', x_images_all.shape)
+        # print('y_labels_all:', y_labels_all.shape)
+        if len(x_images_all.shape)>4:
+            x_images_all = x_images_all.flatten(start_dim=0, end_dim=1)
+            y_labels_all = y_labels_all.flatten(start_dim=0, end_dim=1)
+
+        if self.args.backbone != "ResNet12":
+            val_curvature_loader = self.data.dataset.get_curvature_loader(x_images=x_images_all, y_labels=y_labels_all, batch_size=16,)
+            curvature_dict = measure_curvature(model=self.model.classifier,
+                                                    dataloader=val_curvature_loader,
+                                                    data_fraction=0.5,
+                                                    batch_size=16,
+                                                    num_power_iter=8,
+                                                    device=self.device)
+        else:
+            curvature_dict = None
         data_batch = (
             x_support_set, x_target_set, y_support_set, y_target_set)
 
@@ -166,9 +206,17 @@ class ExperimentBuilder(object):
                 total_losses[key] = [float(value)]
             else:
                 total_losses[key].append(float(value))
+        
+        # add curvature stats into dict
+        if curvature_dict is not None:
+            for key, value in curvature_dict.items():
+                if key not in total_losses:
+                    total_losses[key] = [float(value)]
+                else:
+                    total_losses[key].append(float(value))
 
         val_losses = self.build_summary_dict(total_losses=total_losses, phase=phase)
-        val_output_update = self.build_loss_summary_string(losses)
+        val_output_update = self.build_loss_summary_string(losses, phase=phase)
 
         pbar_val.update(1)
         pbar_val.set_description(
@@ -184,7 +232,16 @@ class ExperimentBuilder(object):
         :param pbar_test: The progress bar of the val stage.
         :return: The updated val_losses, total_losses
         """
-        x_support_set, x_target_set, y_support_set, y_target_set, seed = val_sample
+        # x_support_set, x_target_set, y_support_set, y_target_set, seed = val_sample
+        x_support_set, x_target_set, y_support_set, y_target_set, seed, x_images_all, y_labels_all = val_sample
+        
+        val_curvature_loader = self.data.dataset.get_curvature_loader(x_images=x_images_all, y_labels=y_labels_all)
+        curvature_dict = measure_curvature(model=self.model.classifier,
+                                                dataloader=val_curvature_loader,
+                                                data_fraction=1.0,
+                                                batch_size=8,
+                                                num_power_iter=10,
+                                                device=self.device)
         data_batch = (
             x_support_set, x_target_set, y_support_set, y_target_set)
 
@@ -192,11 +249,12 @@ class ExperimentBuilder(object):
 
         per_model_per_batch_preds[model_idx].extend(list(per_task_preds))
 
-        test_output_update = self.build_loss_summary_string(losses)
+        test_output_update = self.build_loss_summary_string(losses, curvature_dict=curvature_dict, phase="test")
 
         pbar_test.update(1)
         pbar_test.set_description(
             "test_phase {} -> {}".format(self.epoch, test_output_update))
+        
 
         return per_model_per_batch_preds
 
@@ -218,7 +276,8 @@ class ExperimentBuilder(object):
 
         print("saved models to", self.saved_models_filepath)
 
-    def pack_and_save_metrics(self, start_time, create_summary_csv, train_losses, val_losses, state):
+    def pack_and_save_metrics(self, start_time, create_summary_csv, 
+                              train_losses, val_losses, curvature_dict, state):
         """
         Given current epochs start_time, train losses, val losses and whether to create a new stats csv file, pack stats
         and save into a statistics csv file. Return a new start time for the new epoch.
@@ -229,8 +288,10 @@ class ExperimentBuilder(object):
         :param val_losses: A dictionary with the currrent val loss
         :return: The current time, to be used for the next epoch.
         """
-        epoch_summary_losses = self.merge_two_dicts(first_dict=train_losses, second_dict=val_losses)
-
+        if curvature_dict is not None:
+            epoch_summary_losses = self.merge_two_dicts(first_dict=train_losses, second_dict= self.merge_two_dicts(val_losses, curvature_dict))
+        else:
+            epoch_summary_losses = self.merge_two_dicts(first_dict=train_losses, second_dict= val_losses)
         if 'per_epoch_statistics' not in state:
             state['per_epoch_statistics'] = dict()
 
@@ -241,7 +302,7 @@ class ExperimentBuilder(object):
             else:
                 state['per_epoch_statistics'][key].append(value)
 
-        epoch_summary_string = self.build_loss_summary_string(epoch_summary_losses)
+        epoch_summary_string = self.build_loss_summary_string(epoch_summary_losses, phase='epoch')
         epoch_summary_losses["epoch"] = self.epoch
         epoch_summary_losses['epoch_run_time'] = time.time() - start_time
 
@@ -301,6 +362,9 @@ class ExperimentBuilder(object):
         accuracy_std = np.std(np.equal(per_batch_targets, per_batch_max))
 
         test_losses = {"test_accuracy_mean": accuracy, "test_accuracy_std": accuracy_std}
+        wandb.log({f"{self.exp_name}/test/1.test_accuracy_mean": accuracy,
+              f"{self.exp_name}/test/2.test_accuracy_std": accuracy_std,})
+            
 
         _ = save_statistics(self.logs_filepath,
                             list(test_losses.keys()),
@@ -355,12 +419,28 @@ class ExperimentBuilder(object):
                                 self.state['best_val_iter'] = self.state['current_iter']
                                 self.state['best_epoch'] = int(
                                     self.state['best_val_iter'] / self.args.total_iter_per_epoch)
+                        # inner_curvature_dict = measure_curvature(model=self.model.classifier,
+                        #                         dataloader=self.curvature_dataloader,
+                        #                         data_fraction=0.1,
+                        #                         batch_size=8,
+                        #                         num_power_iter=10,
+                        #                         device=self.device)
+                        # outer_curvature_dict = measure_curvature(model=self.model.regularizer,
+                        #                         dataloader=self.outer_dataloader,
+                        #                         data_fraction=0.1,
+                        #                         batch_size=16,
+                        #                         num_power_iter=10,
+                        #                         device=self.device)
+                        # print(inner_curvature_dict)
+                        # exit()
 
 
                         self.epoch += 1
                         self.state = self.merge_two_dicts(first_dict=self.merge_two_dicts(first_dict=self.state,
                                                                                           second_dict=train_losses),
-                                                          second_dict=val_losses)
+                                                          second_dict=val_losses,)
+                                                        #   second_dict=self.merge_two_dicts(first_dict=val_losses,
+                                                        #                                   second_dict=inner_curvature_dict))
 
                         self.save_models(model=self.model, epoch=self.epoch, state=self.state)
 
@@ -368,6 +448,7 @@ class ExperimentBuilder(object):
                                                                                  create_summary_csv=self.create_summary_csv,
                                                                                  train_losses=train_losses,
                                                                                  val_losses=val_losses,
+                                                                                 curvature_dict=None,
                                                                                  state=self.state)
 
                         self.total_losses = dict()

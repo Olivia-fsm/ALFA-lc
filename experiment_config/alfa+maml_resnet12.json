@@ -17,7 +17,7 @@
   "evaluate_on_test_set_only": false,
 
   "total_epochs": 100,
-  "total_iter_per_epoch":500, "continue_from_epoch": -2,
+  "total_iter_per_epoch":200, "continue_from_epoch": -2,
   "num_evaluation_tasks":600,
   "multi_step_loss_num_epochs": 15,
   "minimum_per_task_contribution": 0.01,
@@ -57,7 +57,11 @@
   "alfa": true,
   "backbone": "ResNet12",
 
-  "use_curvature": false,
+  "use_curvature_inner": false,
+  "clip": -10.0,
+  "use_curvature_outer": false,
+  "input_hessian_outer": false,
+  "layer_param_attn":false,
   "clip_bn": false,
   "init_lipschitz": 10.0
 }
